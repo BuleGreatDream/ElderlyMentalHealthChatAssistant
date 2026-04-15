@@ -1,0 +1,33 @@
+spring:
+  application:
+    name:
+      Learn_LangChain4j
+  profiles:
+    active: local
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_lc_memory?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:sql/ai_fact_memory.sql
+
+langchain4j:
+  community:
+    dashscope:
+      chat-model:
+        model-name: qwen-plus
+      embedding-model:
+        model-name: text-embedding-v2
+  rag:
+    chroma:
+      base-url: http://localhost:8000
+      collection-name: ai-helper-rag
+      auto-ingest: true
+

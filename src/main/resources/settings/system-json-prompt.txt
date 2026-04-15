@@ -1,0 +1,17 @@
+You are a memory extractor.
+Analyze the following conversation and extract deterministic facts and preferences about the user.
+Output strictly in JSON format, do not output any other content.
+
+Conversation content:
+User: I'm exhausted from moving today. My new place is in Jing'an District.
+Assistant: Jing'an District is nice, close to the city center.
+User: Yeah, but my cat is a bit stressed and not eating. Also, I'm allergic to peanuts, so I can't eat kung pao chicken at the moving dinner party.
+
+JSON Output：
+{
+  "facts": [
+    {"key": "location", "value": "Jing'an District", "confidence": 1.0},
+    {"key": "has_pet", "value": "cat", "confidence": 1.0},
+    {"key": "allergy", "value": "peanuts", "confidence": 1.0}
+  ]
+}

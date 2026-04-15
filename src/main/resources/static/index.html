@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="角色面板前端界面" />
+  <title>角色面板</title>
+  <link rel="stylesheet" href="/css/chat.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand__badge">AI</div>
+        <div>
+          <h1>老年心理健康助手</h1>
+        </div>
+      </div>
+      <div class="topbar__status">
+        <span id="connectionStatus" class="status-pill status-pill--idle">未连接</span>
+        <span id="currentMemoryLabel" class="meta-text">memoryId: ai-helper-default</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar sidebar--left">
+        <section class="panel">
+          <div class="panel__header">
+            <h2>接口配置</h2>
+            <span class="panel__hint">可后续扩展</span>
+          </div>
+          <label class="field">
+            <span>接口前缀</span>
+            <input id="apiBaseInput" type="text" placeholder="/ai" />
+          </label>
+          <label class="field">
+            <span>对话接口</span>
+            <input id="chatPathInput" type="text" placeholder="/chat/" />
+          </label>
+          <label class="field">
+            <span>清除记忆接口</span>
+            <input id="clearPathInput" type="text" placeholder="/chat/memory" />
+          </label>
+          <button id="saveConfigBtn" class="btn btn--secondary" type="button">保存配置</button>
+        </section>
+
+        <section class="panel">
+          <div class="panel__header">
+            <h2>会话管理</h2>
+            <span class="panel__hint">支持多记忆扩展</span>
+          </div>
+          <label class="field">
+            <span>memoryId</span>
+            <input id="memoryIdInput" type="text" placeholder="ai-helper-default" />
+          </label>
+          <label class="field">
+            <span>每日吃药时间（HH:mm）</span>
+            <input id="medicationTimesInput" type="text" placeholder="08:00,13:00,21:30" />
+          </label>
+          <div class="session-actions">
+            <button id="saveMemoryBtn" class="btn" type="button">保存记忆</button>
+            <button id="clearMemoryBtn" class="btn btn--danger" type="button">清除记忆</button>
+            <button id="resetChatBtn" class="btn btn--secondary" type="button">清空界面</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="chat-panel">
+        <section class="panel chat-panel__messages">
+          <div class="panel__header">
+            <h2>对话区</h2>
+            <span id="messageCount" class="panel__hint">0 条消息</span>
+          </div>
+          <div id="messageList" class="message-list" aria-live="polite"></div>
+        </section>
+
+        <section class="composer panel">
+          <div class="composer__toolbar">
+            <div class="composer__tip">按 Enter 发送，Shift + Enter 换行</div>
+            <div id="requestHint" class="composer__hint">GET /ai/chat/?message=...</div>
+          </div>
+          <textarea id="messageInput" rows="4" placeholder="输入你想对 AI 说的话..."></textarea>
+          <div class="composer__actions">
+            <button id="sendBtn" class="btn btn--primary" type="button">发送消息</button>
+            <button id="sampleBtn" class="btn btn--secondary" type="button">填充示例</button>
+          </div>
+        </section>
+      </section>
+
+      <aside class="sidebar sidebar--right">
+        <section class="panel">
+          <div class="panel__header">
+            <h2>运行状态</h2>
+            <span class="panel__hint">实时反馈</span>
+          </div>
+          <div class="status-grid">
+            <div>
+              <div class="status-label">请求状态</div>
+              <div id="requestState" class="status-value">待命</div>
+            </div>
+            <div>
+              <div class="status-label">最近响应</div>
+              <div id="lastResponseState" class="status-value">无</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel panel--fill">
+          <div class="panel__header">
+            <h2>扩展建议</h2>
+            <span class="panel__hint">为后续升级预留</span>
+          </div>
+          <ul class="feature-list">
+            <li>支持切换不同 memoryId 对话</li>
+            <li>支持多轮消息持久化展示</li>
+            <li>支持系统提示词与风格模板</li>
+            <li>支持接入 JSON 响应和 SSE 流式输出</li>
+          </ul>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <template id="messageTemplate">
+    <article class="message">
+      <div class="message__meta">
+        <span class="message__role"></span>
+        <time class="message__time"></time>
+      </div>
+      <div class="message__bubble"></div>
+    </article>
+  </template>
+
+  <script src="/js/chat.js"></script>
+</body>
+</html>
+
