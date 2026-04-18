@@ -27,7 +27,8 @@ public class AiMemoryContoller {
     ) {
         List<AiChatMemoryRecord> records = aiMemoryService.getMemoryRecords(memoryId);
         List<String> list = ChatRecordExtractor.extract(records);
-        FileTextTool.writeTxt(Path.of("src/main/resources/Memory"), list);
+        Path savedFile = FileTextTool.writeTxt(Path.of("src/main/resources/Memory"), list);
+        System.out.println("=== Memory 已保存到文件: " + savedFile + " ===");
         return list;
     }
 

@@ -24,7 +24,7 @@ import java.util.List;
 @Configuration
 public class RagConfig {
 
-    private static final String DOCUMENT_FOLDER = "src/main/resources/Memory";
+    private static final Path DOCUMENT_FOLDER = Paths.get("src", "main", "resources", "Memory");
 
     @Value("${langchain4j.rag.chroma.base-url:http://localhost:8000}")
     private String chromaBaseUrl;
@@ -63,29 +63,6 @@ public class RagConfig {
         return embeddingStore;
     }
 
-//    @Bean
-//    public EmbeddingStore<TextSegment> embeddingStore(
-//            EmbeddingModel embeddingModel
-//    ) {
-//        EmbeddingStore<TextSegment> embeddingStore = ChromaEmbeddingStore.builder()
-//                .baseUrl(chromaBaseUrl)
-//                .collectionName(chromaCollectionName)
-//                .build();
-//
-//        try {
-//            if (chromaAutoIngest && FileTextTool.hasAnyFile(DOCUMENT_FOLDER)) {
-//                System.out.println("=== 检测到文档，向 Chroma 向量库追加向量化 ===");
-//                loadAndIngestDocuments(embeddingStore, embeddingModel);
-//            } else {
-//                System.out.println("=== Chroma 向量库启动完成，未执行自动向量化 ===");
-//            }
-//        } catch (Exception e) {
-//            throw new IllegalStateException("Failed to preload vector store", e);
-//        }
-//
-//        return embeddingStore;
-//    }
-
 
     // ====================== 核心 Bean ======================
     @Bean
@@ -107,7 +84,7 @@ public class RagConfig {
             EmbeddingStore<TextSegment> embeddingStore,
             EmbeddingModel embeddingModel
     ) {
-        Path folderPath = Paths.get(DOCUMENT_FOLDER);
+        Path folderPath = DOCUMENT_FOLDER;
         if (!folderPath.toFile().exists()) {
             return;
         }
@@ -129,5 +106,10 @@ public class RagConfig {
                 .build();
 
         ingestor.ingest(documents);
+
+        List<Path> deletedFiles = FileTextTool.deleteRegularFilesInDirectory(folderPath);
+        if (!deletedFiles.isEmpty()) {
+            System.out.println("=== Memory 文档已向量化并删除源文件，共 " + deletedFiles.size() + " 个 ===");
+        }
     }
 }

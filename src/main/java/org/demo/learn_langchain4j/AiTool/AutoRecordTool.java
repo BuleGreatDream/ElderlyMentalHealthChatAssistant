@@ -22,7 +22,7 @@ public class AutoRecordTool {
     @Tool(name="MemoryRecord",
             value="A memory retention tool that persistently saves conversation history. Accepts an ai_name parameter to identify the AI participant. Invoke this tool when the user requests to save the conversation memory, ends the conversation, or when the AI determines that the current dialogue is complete and worth retaining.")
     public String record(String AiName){
-        String memoryId = "";
+        String memoryId;
         if (AiName.compareTo("DorothyHaze") == 0 || AiName.compareTo("Dorothy") == 0){
             memoryId = "ai-helper-default";
         }else{
@@ -30,7 +30,8 @@ public class AutoRecordTool {
         }
         List<AiChatMemoryRecord> records = aiMemoryService.getMemoryRecords(memoryId);
         List<String> list = ChatRecordExtractor.extract(records);
-        FileTextTool.writeTxt(Path.of("src/main/resources/Memory"), list);
+        Path savedFile = FileTextTool.writeTxt(Path.of("src/main/resources/Memory"), list);
+        System.out.println("=== Memory 已保存到文件: " + savedFile + " ===");
         return "Memory saved successfully.";
     }
 
