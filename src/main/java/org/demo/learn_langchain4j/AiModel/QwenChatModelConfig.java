@@ -2,7 +2,9 @@ package org.demo.learn_langchain4j.AiModel;
 
 
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
+import dev.langchain4j.community.model.dashscope.QwenStreamingChatModel;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -33,5 +35,13 @@ public class QwenChatModelConfig {
                 .build();
     }
 
+    @Bean
+    public StreamingChatModel myQwenStreamingChatModel() {
+        return QwenStreamingChatModel.builder()
+                .modelName(modelName)
+                .apiKey(apiKey)
+                .listeners(List.of(chatModelListener))
+                .build();
+    }
 
 }

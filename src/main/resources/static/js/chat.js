@@ -18,7 +18,8 @@
   const state = {
     messages: [],
     config: { ...DEFAULT_CONFIG },
-    loading: false
+    loading: false,
+    streaming: true
   };
 
   const $ = (id) => document.getElementById(id);
@@ -42,7 +43,8 @@
     sampleBtn: $('sampleBtn'),
     requestState: $('requestState'),
     lastResponseState: $('lastResponseState'),
-    requestHint: $('requestHint')
+    requestHint: $('requestHint'),
+    streamingToggle: $('streamingToggle')
   };
 
   function readStorage(key, fallback) {
@@ -73,6 +75,13 @@
       minute: '2-digit',
       second: '2-digit'
     });
+  }
+
+  function parseSSEData(line) {
+    if (line.startsWith('data:')) {
+      return line.substring(5);
+    }
+    return null;
   }
 
   function setStatus(text, tone = 'idle') {
@@ -242,6 +251,7 @@
 
     syncConfigFromInputs();
     persistConfig();
+    state.streaming = elements.streamingToggle.checked;
 
     addMessage('user', message);
     elements.messageInput.value = '';
@@ -249,6 +259,14 @@
     setStatus('发送中', 'idle');
     setLastResponseState('等待响应');
 
+    if (state.streaming) {
+      await sendMessageStreaming(message);
+    } else {
+      await sendMessageBlocking(message);
+    }
+  }
+
+  async function sendMessageBlocking(message) {
     try {
       const url = buildUrl(state.config.chatPath, {
         message,
@@ -262,6 +280,77 @@
       const errorText = error instanceof Error ? error.message : String(error);
       addMessage('error', `发送失败：${errorText}`);
       setLastResponseState('请求失败');
+      setStatus('请求失败', 'warn');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function sendMessageStreaming(message) {
+    addMessage('ai', '');
+    const aiMessageIndex = state.messages.length - 1;
+    let tokenCount = 0;
+
+    try {
+      const streamPath = `${normalizePath(state.config.chatPath)}/stream`;
+      const url = buildUrl(streamPath, {
+        message,
+        medicationTimes: state.config.medicationTimes
+      }, false);
+
+      const response = await fetch(url, {
+        headers: { Accept: 'text/event-stream' }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `请求失败：${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          const data = parseSSEData(trimmed);
+          if (data !== null) {
+            tokenCount++;
+            state.messages[aiMessageIndex].content += data;
+            renderMessageList();
+          }
+        }
+      }
+
+      if (buffer.trim()) {
+        const data = parseSSEData(buffer.trim());
+        if (data !== null) {
+          state.messages[aiMessageIndex].content += data;
+        }
+      }
+
+      renderMessageList();
+      setLastResponseState(`流式完成（${tokenCount} tokens）`);
+      setStatus('连接正常', 'ok');
+    } catch (error) {
+      const errorText = error instanceof Error ? error.message : String(error);
+      if (state.messages[aiMessageIndex] && state.messages[aiMessageIndex].content) {
+        state.messages[aiMessageIndex].content += `\n\n[流中断: ${errorText}]`;
+      } else {
+        state.messages.length = Math.max(0, state.messages.length - 1);
+        addMessage('error', `流式发送失败：${errorText}`);
+      }
+      renderMessageList();
+      setLastResponseState('流中断');
       setStatus('请求失败', 'warn');
     } finally {
       setLoading(false);
@@ -351,6 +440,10 @@
         event.preventDefault();
         sendMessage();
       }
+    });
+
+    elements.streamingToggle.addEventListener('change', () => {
+      state.streaming = elements.streamingToggle.checked;
     });
 
     [elements.apiBaseInput, elements.chatPathInput, elements.clearPathInput, elements.medicationTimesInput].forEach((el) => {

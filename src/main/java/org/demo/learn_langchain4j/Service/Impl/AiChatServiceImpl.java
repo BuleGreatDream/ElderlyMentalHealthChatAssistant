@@ -3,7 +3,9 @@ package org.demo.learn_langchain4j.Service.Impl;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.service.TokenStream;
 import org.demo.learn_langchain4j.AiService.AiHelperDraftChatClient;
+import org.demo.learn_langchain4j.AiService.AiHelperStreamingChatClient;
 import org.demo.learn_langchain4j.AiService.AiScoreChatClient;
 import org.demo.learn_langchain4j.AiService.Factory.AiHelperServicFactory;
 import org.demo.learn_langchain4j.Memory.HelperChatMemoryStore;
@@ -23,6 +25,9 @@ public class AiChatServiceImpl implements AiChatService {
 
     @Autowired
     private AiHelperDraftChatClient aiHelperDraftChatClient;
+
+    @Autowired
+    private AiHelperStreamingChatClient aiHelperStreamingChatClient;
 
     @Autowired
     private AiScoreChatClient aiScoreChatClient;
@@ -50,6 +55,12 @@ public class AiChatServiceImpl implements AiChatService {
         persistFinalTurn(message, content);
         aiFactExtractionAsyncService.extractAndSave(AiHelperServicFactory.DEFAULT_MEMORY_ID, message, content);
         return content;
+    }
+
+    @Override
+    public TokenStream chatStream(String message, String medicationTimes) {
+        String promptMessage = medicationScheduleService.buildMedicationAwareMessage(message, medicationTimes);
+        return aiHelperStreamingChatClient.chat(promptMessage);
     }
 
     private boolean isCompliant(String message, String content) {
